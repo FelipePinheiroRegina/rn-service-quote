@@ -1,0 +1,13 @@
+export const COLORS = {
+  BASE_PURPLE: '#6A46EB',
+  BASE_WHITE: '#FFFFFF',
+
+  GRAY_100: '#FAFAFA',
+  GRAY_300: '#E6E5E5',
+  GRAY_500: '#676767',
+  GRAY_600: '#4A4A4A',
+
+  SUCCESS_DARK: '#30752F',
+  INFO_DARK: '#1D7096',
+  DANGER_DARK: '#9E4949',
+} as const

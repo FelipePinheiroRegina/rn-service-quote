@@ -2,6 +2,9 @@
   "expo": {
     "name": "rn-service-quote",
     "slug": "rn-service-quote",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "android": {
+      "package": "com.anonymous.rnservicequote"
+    }
   }
 }

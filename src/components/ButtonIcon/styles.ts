@@ -5,9 +5,13 @@ export const styles = StyleSheet.create({
   default: {
     padding: 12,
     borderRadius: 999,
-    minWidth: 98,
+    height: 48,
+    width: 48,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.GRAY_300,
+    backgroundColor: COLORS.GRAY_100,
   },
 
   center: {
@@ -15,15 +19,5 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     justifyContent: 'center',
-  },
-
-  primary: {
-    backgroundColor: COLORS.BASE_PURPLE,
-  },
-
-  outlined: {
-    borderWidth: 1,
-    borderColor: COLORS.GRAY_300,
-    backgroundColor: COLORS.GRAY_100,
   },
 })

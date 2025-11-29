@@ -1,6 +1,10 @@
-import { QuoteList } from '@/app/QuoteList'
-import React from 'react'
+import { PaperProvider } from 'react-native-paper'
+import { Routes } from '@/routes'
 
 export default function App() {
-  return <QuoteList />
+  return (
+    <PaperProvider>
+      <Routes />
+    </PaperProvider>
+  )
 }

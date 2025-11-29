@@ -1,0 +1,6 @@
+export enum STATUS {
+  APPROVED = 'APPROVED',
+  REFUSED = 'REFUSED',
+  DRAFT = 'DRAFT',
+  SENT = 'SENT',
+}

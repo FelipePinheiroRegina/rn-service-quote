@@ -1,22 +1,30 @@
-import { Text, TouchableOpacity, TouchableOpacityProps } from 'react-native'
+import {
+  Text,
+  TouchableOpacity,
+  TouchableOpacityProps,
+  View,
+} from 'react-native'
 import { styles } from './styles'
-import { TextTheme } from '../Text'
+import { CustomText } from '../CustomText'
 
 export type ButtonVariant = 'primary' | 'outlined'
 
 interface ButtonProps extends TouchableOpacityProps {
   children: React.ReactNode
-  variant: ButtonVariant
+  variant?: ButtonVariant
 }
 
-export function Button({ children, variant, ...props }: ButtonProps) {
-  const defineColor = variant === 'primary' ? 'white' : 'purple'
-
+export function Button({
+  children,
+  variant = 'primary',
+  ...props
+}: ButtonProps) {
   return (
-    <TouchableOpacity style={[styles.default, styles[variant]]} {...props}>
-      <TextTheme variant="subTitle2" color={defineColor}>
-        {children}
-      </TextTheme>
+    <TouchableOpacity
+      {...props}
+      style={[props.style, styles.default, styles[variant]]}
+    >
+      <View style={styles.center}>{children}</View>
     </TouchableOpacity>
   )
 }

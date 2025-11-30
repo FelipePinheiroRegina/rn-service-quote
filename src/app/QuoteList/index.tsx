@@ -11,12 +11,9 @@ import { COLORS } from '@/styles/colors'
 import { Divider } from '@/components/Divider'
 import { ButtonIcon } from '@/components/ButtonIcon'
 import { formatCurrencyBRL } from '@/utils/formatCurrencyBRL'
-import { DrawerRoutesProps } from '@/routes/DrawerRoutes'
+import { StackRoutesProps } from '@/routes/StackRoutes'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetView,
-} from '@gorhom/bottom-sheet'
+import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet'
 import { useRef } from 'react'
 import { Filter } from './components/Filter'
 
@@ -24,35 +21,35 @@ const quotes = [
   {
     id: '1',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '2',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '3',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '4',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '5',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
@@ -60,41 +57,41 @@ const quotes = [
   {
     id: '6',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '7',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '8',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '9',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
   {
     id: '10',
     title: ' Desenvolvimento de aplicativo de loja online',
-    description: 'Soluções Tecnológicas Beta',
+    client: 'Soluções Tecnológicas Beta',
     status: STATUS.APPROVED,
     price: 22300.0,
   },
 ]
 
-type QuoteListProps = DrawerRoutesProps<'list'>
+type QuoteListProps = StackRoutesProps<'list'>
 
 export function QuoteList({ navigation }: QuoteListProps) {
   const bottomSheetRef = useRef<BottomSheet>(null)
@@ -116,7 +113,7 @@ export function QuoteList({ navigation }: QuoteListProps) {
             </CustomText>
           </View>
 
-          <Button>
+          <Button onPress={() => navigation.navigate('createOrUpdate')}>
             <Plus color={COLORS.BASE_WHITE} />
             <CustomText variant="subTitle2" color="white">
               New
@@ -128,7 +125,9 @@ export function QuoteList({ navigation }: QuoteListProps) {
 
         <View style={styles.main}>
           <View style={styles.filter}>
-            <TextField icon={<Search />} placeholder="Search for quotes..." />
+            <View style={{ flex: 1 }}>
+              <TextField icon={<Search />} placeholder="Title or Client..." />
+            </View>
 
             <ButtonIcon onPress={openFilters}>
               <SlidersHorizontal color={COLORS.BASE_PURPLE} />
@@ -144,7 +143,7 @@ export function QuoteList({ navigation }: QuoteListProps) {
                 <View style={styles.textContainer}>
                   <CustomText variant="subTitle1">{item.title}</CustomText>
                   <CustomText variant="body2" color="gray_600">
-                    {item.description}
+                    {item.client}
                   </CustomText>
                 </View>
 
@@ -163,7 +162,7 @@ export function QuoteList({ navigation }: QuoteListProps) {
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
-        snapPoints={['40%', '60%']}
+        snapPoints={['40%', '68%']}
         enablePanDownToClose
         backdropComponent={(props) => (
           <BottomSheetBackdrop
@@ -174,12 +173,7 @@ export function QuoteList({ navigation }: QuoteListProps) {
           />
         )}
       >
-        <BottomSheetView style={{ padding: 16 }}>
-          <CustomText variant="title">Filtros</CustomText>
-          <CustomText variant="body1" color="gray_600">
-            Aqui você coloca os campos de filtro...
-          </CustomText>
-        </BottomSheetView>
+        <Filter onClose={() => bottomSheetRef.current.close()} />
       </BottomSheet>
     </GestureHandlerRootView>
   )

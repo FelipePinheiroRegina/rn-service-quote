@@ -22,7 +22,6 @@ export const styles = StyleSheet.create({
   },
 
   filter: {
-    width: '100%',
     flexDirection: 'row',
     gap: 8,
     marginBottom: 32,

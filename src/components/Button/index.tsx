@@ -1,11 +1,5 @@
-import {
-  Text,
-  TouchableOpacity,
-  TouchableOpacityProps,
-  View,
-} from 'react-native'
+import { TouchableOpacity, TouchableOpacityProps, View } from 'react-native'
 import { styles } from './styles'
-import { CustomText } from '../CustomText'
 
 export type ButtonVariant = 'primary' | 'outlined'
 

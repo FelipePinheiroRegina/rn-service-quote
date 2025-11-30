@@ -4,6 +4,7 @@ import { formatCurrencyBRL } from '@/utils/formatCurrencyBRL'
 import { styles } from './styles'
 import { ReactNode } from 'react'
 import { Button } from '../Button'
+import { ButtonIcon } from '../ButtonIcon'
 
 interface ServiceItemProps {
   title: string
@@ -11,7 +12,7 @@ interface ServiceItemProps {
     text: string
     ellipsis?: boolean
   }
-  price: number
+  totalInCents: number
   qtd: number
   withButton?: {
     icon: ReactNode
@@ -22,7 +23,7 @@ interface ServiceItemProps {
 export function ServiceItem({
   title,
   description,
-  price,
+  totalInCents,
   qtd,
   withButton,
 }: ServiceItemProps) {
@@ -43,17 +44,17 @@ export function ServiceItem({
         </CustomText>
       </View>
 
-      <View style={styles.gap}>
-        <CustomText variant="subTitle1">{formatCurrencyBRL(price)}</CustomText>
+      <View style={[styles.gapRight, withButton && { marginRight: 16 }]}>
+        <CustomText variant="subTitle1">
+          {formatCurrencyBRL(totalInCents)}
+        </CustomText>
         <CustomText variant="body3" color="gray_600">
           {`Qt: ${qtd}`}
         </CustomText>
       </View>
 
       {withButton && (
-        <Button variant="outlined" onPress={withButton.onPress}>
-          {withButton.icon}
-        </Button>
+        <ButtonIcon onPress={withButton.onPress}>{withButton.icon}</ButtonIcon>
       )}
     </View>
   )

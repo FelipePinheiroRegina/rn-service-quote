@@ -1,10 +1,13 @@
 import { COLORS } from '@/styles/colors'
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
-export function Divider() {
-  return (
-    <View
-      style={{ borderBottomWidth: 0.2, backgroundColor: COLORS.GRAY_100 }}
-    />
-  )
+export function Divider(props: View['props']) {
+  return <View style={[styles.container, props.style]} />
 }
+
+const styles = StyleSheet.create({
+  container: {
+    borderBottomWidth: 0.2,
+    backgroundColor: COLORS.GRAY_100,
+  },
+})

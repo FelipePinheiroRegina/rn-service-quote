@@ -10,11 +10,15 @@ export const styles = StyleSheet.create({
 
   gap: {
     gap: 3,
+    flex: 1,
+  },
+
+  gapRight: {
+    gap: 3,
+    alignItems: 'flex-end',
   },
 
   description: {
     maxWidth: 200,
   },
-
-  
 })

@@ -1,5 +1,6 @@
 export const COLORS = {
   BASE_PURPLE: '#6A46EB',
+  PURPLE_LIGHT: '#E6E0FF',
   BASE_WHITE: '#FFFFFF',
 
   GRAY_100: '#FAFAFA',

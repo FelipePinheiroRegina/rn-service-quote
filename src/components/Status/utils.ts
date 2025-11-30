@@ -26,7 +26,7 @@ export function definePoint(variant: STATUS) {
   }
 }
 
-export function defineText(variant: STATUS) {
+export function defineColorText(variant: STATUS) {
   switch (variant) {
     case STATUS.APPROVED:
       return 'success_dark'
@@ -36,5 +36,18 @@ export function defineText(variant: STATUS) {
       return 'gray_500'
     case STATUS.REFUSED:
       return 'danger_dark'
+  }
+}
+
+export function defineText(variant: STATUS) {
+  switch (variant) {
+    case STATUS.APPROVED:
+      return 'Approved'
+    case STATUS.SENT:
+      return 'Sent'
+    case STATUS.DRAFT:
+      return 'Draft'
+    case STATUS.REFUSED:
+      return 'Refused'
   }
 }

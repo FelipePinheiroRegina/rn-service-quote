@@ -2,7 +2,7 @@ import { View } from 'react-native'
 import { styles } from './styles'
 import { CustomText } from '../CustomText'
 import { STATUS } from '@/types/status'
-import { defineBg, definePoint, defineText } from './utils'
+import { defineBg, defineColorText, definePoint, defineText } from './utils'
 
 interface StatusProps {
   status: STATUS
@@ -11,13 +11,14 @@ interface StatusProps {
 export function Status({ status }: StatusProps) {
   const colorBg = defineBg(status)
   const colorPoint = definePoint(status)
-  const colorText = defineText(status)
+  const colorText = defineColorText(status)
+  const text = defineText(status)
 
   return (
     <View style={[styles.container, styles[colorBg]]}>
       <View style={[styles.point, styles[colorPoint]]} />
       <CustomText variant="subTitle3" color={colorText}>
-        Aprovado
+        {text}
       </CustomText>
     </View>
   )

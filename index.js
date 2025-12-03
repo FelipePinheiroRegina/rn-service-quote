@@ -1,5 +1,8 @@
-import { registerRootComponent } from "expo";
+import { registerRootComponent } from 'expo'
 
-import App from "./App";
+// Configurar dayjs antes de iniciar o app
+import './src/config/dayjs'
 
-registerRootComponent(App);
+import App from './App'
+
+registerRootComponent(App)

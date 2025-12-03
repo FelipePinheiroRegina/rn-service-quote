@@ -31,7 +31,7 @@ import { Button } from '@/components/Button'
 import { formatCurrencyBRL } from '@/utils/formatCurrencyBRL'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ServiceForm } from './components/ServiceForm'
 import { Controller, FormProvider, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -42,6 +42,8 @@ import { ServiceSchema } from '@/types/service'
 import { schemaService } from '@/schemas/service'
 import { SERVICE_FORM_DEFAULT } from '@/constants/service'
 import { generateId } from '@/utils/generateId'
+import { createQuote, getQuotes, updateQuote } from '@/storage/quoteStorage'
+import { getServices } from '@/storage/serviceStorage'
 
 type CreateOrUpdateQuoteProps = StackRoutesProps<'createOrUpdate'>
 
@@ -49,12 +51,23 @@ export function CreateOrUpdateQuote({
   navigation,
   route,
 }: CreateOrUpdateQuoteProps) {
-  const isUpdate = Boolean(route.params?.id)
+  const quoteId = route.params?.id
+  console.log(quoteId)
+  const isUpdate = Boolean(quoteId)
   const bottomSheetRef = useRef<BottomSheet>(null)
   const [serviceItems, setServiceItems] = useState<ServiceSchema[]>([])
 
+  const qtdItems = serviceItems.reduce((acc, item) => acc + item.qtd, 0)
+  const subtotalInCents = serviceItems.reduce(
+    (acc, item) => acc + item.totalInCents * item.qtd,
+    0
+  )
+
   const {
     control,
+    watch,
+    setValue,
+    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<QuoteSchema>({
@@ -62,19 +75,53 @@ export function CreateOrUpdateQuote({
     defaultValues: QUOTE_FORM_DEFAULT,
   })
 
+  const discountInPercentage = watch('discount.percentage')
+  const discountInAmountInCents = watch('discount.amountInCents')
+  const totalInCentsWithDiscount = subtotalInCents - discountInAmountInCents
+
+  // Sincronizar desconto baseado na porcentagem
+  useEffect(() => {
+    if (discountInPercentage) {
+      const discountInCents = Math.round(
+        (subtotalInCents * discountInPercentage) / 100
+      )
+      setValue('discount.amountInCents', discountInCents)
+    } else {
+      setValue('discount.amountInCents', 0)
+    }
+  }, [discountInPercentage, subtotalInCents, setValue])
+
+  // Sincronizar subtotal e total com o formulário
+  useEffect(() => {
+    setValue('subtotalInCents', subtotalInCents)
+    setValue('totalInCents', totalInCentsWithDiscount)
+  }, [subtotalInCents, totalInCentsWithDiscount, setValue])
+
   const methodsService = useForm<ServiceSchema>({
     resolver: zodResolver(schemaService),
     defaultValues: SERVICE_FORM_DEFAULT,
   })
 
-  const onSubmit = (dataQuote: QuoteSchema, dataService: ServiceSchema) => {
+  const onSubmit = async (dataQuote: QuoteSchema) => {
     console.log(dataQuote)
-    console.log(dataService)
+    isUpdate
+      ? await updateQuote(dataQuote, serviceItems)
+      : await createQuote(dataQuote, serviceItems)
+    navigation.goBack()
+  }
+
+  const handleCancelForm = () => {
+    navigation.goBack()
+    reset(QUOTE_FORM_DEFAULT)
+    setServiceItems([])
+    methodsService.reset(SERVICE_FORM_DEFAULT)
   }
 
   const onSubmitService = (data: ServiceSchema) => {
+    console.log(data)
     setServiceItems((state) => {
-      const exists = state.some((item) => item.id === data.id)
+      // Se tem ID válido (não vazio), é uma edição
+      const exists = data.id && state.some((item) => item.id === data.id)
 
       if (exists) {
         return state.map((item) =>
@@ -82,7 +129,15 @@ export function CreateOrUpdateQuote({
         )
       }
 
-      return [{ ...data, id: generateId() }, ...state]
+      // Novo serviço: gera ID único e adiciona createdAt/updatedAt
+      const newService: ServiceSchema = {
+        ...data,
+        id: generateId(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      return [newService, ...state]
     })
 
     bottomSheetRef.current.close()
@@ -97,7 +152,7 @@ export function CreateOrUpdateQuote({
     methodsService.setValue('description', description)
     methodsService.setValue('qtd', qtd)
     methodsService.setValue('totalInCents', totalInCents)
-    methodsService.setValue('createdAt', createdAt)
+    methodsService.setValue('createdAt', new Date(createdAt))
     methodsService.setValue('updatedAt', new Date())
 
     bottomSheetRef.current.expand()
@@ -117,6 +172,25 @@ export function CreateOrUpdateQuote({
   const openServiceForm = () => {
     bottomSheetRef.current?.expand()
   }
+
+  const fetchQuote = async () => {
+    const quotes = await getQuotes()
+    const quote = quotes.find((quote: QuoteSchema) => quote.id === quoteId)
+    const services = await getServices(quoteId)
+
+    reset({
+      ...quote,
+      createdAt: new Date(quote.createdAt),
+      updatedAt: new Date(quote.updatedAt),
+    })
+    setServiceItems(services)
+  }
+
+  useEffect(() => {
+    if (quoteId) {
+      fetchQuote()
+    }
+  }, [quoteId])
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -147,30 +221,52 @@ export function CreateOrUpdateQuote({
                 </View>
               }
             >
-              <Controller
-                control={control}
-                name="title"
-                render={({ field }) => (
-                  <TextField
-                    placeholder="Title"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                  />
+              <View>
+                <Controller
+                  control={control}
+                  name="title"
+                  render={({ field }) => (
+                    <TextField
+                      placeholder="Title"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
+                {errors.title && (
+                  <CustomText
+                    variant="body3"
+                    color="danger_dark"
+                    style={{ marginTop: 4 }}
+                  >
+                    {errors.title.message}
+                  </CustomText>
                 )}
-              />
-              <Controller
-                control={control}
-                name="client"
-                render={({ field }) => (
-                  <TextField
-                    placeholder="Client"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                  />
+              </View>
+              <View>
+                <Controller
+                  control={control}
+                  name="client"
+                  render={({ field }) => (
+                    <TextField
+                      placeholder="Client"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
+                {errors.client && (
+                  <CustomText
+                    variant="body3"
+                    color="danger_dark"
+                    style={{ marginTop: 4 }}
+                  >
+                    {errors.client.message}
+                  </CustomText>
                 )}
-              />
+              </View>
             </Card>
 
             <Card
@@ -267,7 +363,7 @@ export function CreateOrUpdateQuote({
 
             <Card
               styleChildren={{
-                gap: 20,
+                gap: 8,
               }}
               header={
                 <View
@@ -288,12 +384,18 @@ export function CreateOrUpdateQuote({
                 }}
               >
                 <CustomText variant="body2">Subtotal</CustomText>
-                <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                <View
+                  style={{
+                    gap: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
                   <CustomText variant="body3" color="gray_600">
-                    8 items
+                    {qtdItems} items
                   </CustomText>
                   <CustomText variant="body2">
-                    {formatCurrencyBRL(3847.5)}
+                    {formatCurrencyBRL(subtotalInCents)}
                   </CustomText>
                 </View>
               </View>
@@ -317,22 +419,39 @@ export function CreateOrUpdateQuote({
                       borderColor: COLORS.GRAY_300,
                       backgroundColor: COLORS.GRAY_100,
                       borderRadius: 999,
-                      width: 72,
+                      width: 96,
                       paddingLeft: 16,
                       paddingRight: 16,
                       paddingVertical: 4,
                     }}
                   >
-                    <TextInput
-                      style={{ flex: 1, fontSize: 14 }}
-                      defaultValue="8"
+                    <Controller
+                      control={control}
+                      name="discount.percentage"
+                      render={({ field }) => (
+                        <TextInput
+                          style={{ flex: 1, fontSize: 14 }}
+                          defaultValue="0"
+                          value={field.value.toString()}
+                          onChangeText={(text) => field.onChange(Number(text))}
+                          onBlur={() => {
+                            field.onBlur()
+                            if (!field.value) {
+                              setValue('discount.percentage', 0)
+                            }
+                          }}
+                          keyboardType="numeric"
+                          maxLength={3}
+                          inputMode="numeric"
+                        />
+                      )}
                     />
                     <Percent size={18} />
                   </View>
                 </View>
 
                 <CustomText variant="body2" color="danger_dark">
-                  - {formatCurrencyBRL(200)}
+                  - {formatCurrencyBRL(discountInAmountInCents)}
                 </CustomText>
               </View>
 
@@ -350,14 +469,15 @@ export function CreateOrUpdateQuote({
                   <CustomText
                     variant="body2"
                     style={{
-                      textDecorationLine: 'line-through',
+                      textDecorationLine:
+                        discountInPercentage > 0 ? 'line-through' : 'none',
                       color: COLORS.GRAY_500,
                     }}
                   >
-                    {formatCurrencyBRL(4050)}
+                    {formatCurrencyBRL(subtotalInCents)}
                   </CustomText>
                   <CustomText variant="title">
-                    {formatCurrencyBRL(3847.5)}
+                    {formatCurrencyBRL(totalInCentsWithDiscount)}
                   </CustomText>
                 </View>
               </View>
@@ -368,6 +488,7 @@ export function CreateOrUpdateQuote({
 
           <View style={styles.footerActions}>
             <Button
+              onPress={handleCancelForm}
               variant="outlined"
               style={{
                 flex: 1,
@@ -380,6 +501,7 @@ export function CreateOrUpdateQuote({
               </CustomText>
             </Button>
             <Button
+              onPress={handleSubmit(onSubmit)}
               variant="primary"
               style={{
                 flex: 1,

@@ -29,7 +29,6 @@ export const styles = StyleSheet.create({
 
   cardList: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
     justifyContent: 'space-between',
 
     maxHeight: 124,
@@ -37,13 +36,13 @@ export const styles = StyleSheet.create({
 
   textContainer: {
     maxWidth: 200,
-    gap: 8,
+    gap: 16,
   },
 
   details: {
     height: '100%',
     alignItems: 'flex-end',
-    justifyContent: 'space-between',
+    gap: 16,
   },
 
   // BOTTOM SHEET

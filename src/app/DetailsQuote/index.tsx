@@ -21,54 +21,48 @@ import { ServiceItem } from '@/components/ServiceItem'
 import { Button } from '@/components/Button'
 import { formatCurrencyBRL } from '@/utils/formatCurrencyBRL'
 import { ButtonIcon } from '@/components/ButtonIcon'
+import { useCallback, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import { QuoteSchema } from '@/types/quote'
+import { copyQuote, deleteQuote, getQuotes } from '@/storage/quoteStorage'
+import { formatDate } from '@/utils/formatDate'
+import { ServiceSchema } from '@/types/service'
+import { getServices } from '@/storage/serviceStorage'
 
 type DetailsQuoteProps = StackRoutesProps<'details'>
 
-const services = [
-  {
-    id: '1',
-    title: 'Design de interfaces',
-    description: {
-      text: 'Criação de wireframes e protótipos de alta fidelidade',
-      ellipsis: false,
-    },
-    price: 3847.5,
-    qtd: 1,
-  },
-  {
-    id: '2',
-    title: 'Desenvolvimento front-end',
-    description: {
-      text: 'Criação de interfaces de usuário interativas',
-      ellipsis: false,
-    },
-    price: 3847.5,
-    qtd: 1,
-  },
-  {
-    id: '3',
-    title: 'Desenvolvimento back-end',
-    description: {
-      text: 'Implementação de servidor, banco de dados e APIs',
-      ellipsis: false,
-    },
-    price: 3847.5,
-    qtd: 1,
-  },
-  {
-    id: '4',
-    title: 'Implantação e suporte',
-    description: {
-      text: 'Publicação nas lojas de aplicativos e suporte técnico',
-      ellipsis: false,
-    },
-    price: 3847.5,
-    qtd: 1,
-  },
-]
-
 export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
-  const quoteId = route.params?.id || '12345'
+  const quoteId = route.params?.id
+  const [quote, setQuote] = useState<QuoteSchema | null>(null)
+  const [services, setServices] = useState<ServiceSchema[]>([])
+
+  const handleCopyQuote = async () => {
+    await copyQuote(quoteId)
+    navigation.goBack()
+  }
+
+  const handleDeleteQuote = async () => {
+    await deleteQuote(quoteId)
+    navigation.goBack()
+  }
+
+  const fetchQuote = async () => {
+    const [quote, services] = await Promise.all([
+      getQuotes(),
+      getServices(quoteId),
+    ])
+    const quoteFound = quote.find((q: QuoteSchema) => q.id === quoteId)
+    setQuote(quoteFound)
+    setServices(services)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      if (quoteId) {
+        fetchQuote()
+      }
+    }, [quoteId])
+  )
 
   return (
     <View style={styles.container}>
@@ -79,22 +73,24 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
           </TouchableOpacity>
           <CustomText variant="subTitle2">Quote #{quoteId}</CustomText>
         </View>
-        <Status status={STATUS.SENT} />
+        <Status status={quote?.status} />
       </View>
 
       <View style={styles.dividerContainer}>
         <Divider />
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
-      >
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}>
         <View style={styles.main}>
           <Card
             styleChildren={{ gap: 16 }}
             header={
               <View
-                style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                }}
               >
                 <View
                   style={{
@@ -109,11 +105,8 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
                 >
                   <ShoppingCart size={20} color={COLORS.BASE_PURPLE} />
                 </View>
-                <CustomText
-                  variant="title"
-                  style={{ flex: 1, flexShrink: 1 }}
-                >
-                  Desenvolvimento de aplicativo de loja online
+                <CustomText variant="title" style={{ flex: 1, flexShrink: 1 }}>
+                  {quote?.title}
                 </CustomText>
               </View>
             }
@@ -122,7 +115,7 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
               <CustomText variant="body3" color="gray_500">
                 Client
               </CustomText>
-              <CustomText variant="body2">Soluções Tecnológicas Beta</CustomText>
+              <CustomText variant="body2">{quote?.client}</CustomText>
             </View>
 
             <View style={styles.datesRow}>
@@ -130,13 +123,17 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
                 <CustomText variant="body3" color="gray_500">
                   Created on
                 </CustomText>
-                <CustomText variant="body2">22/08/2024</CustomText>
+                <CustomText variant="body2">
+                  {formatDate(quote?.createdAt)}
+                </CustomText>
               </View>
               <View style={styles.dateColumn}>
                 <CustomText variant="body3" color="gray_500">
                   Updated on
                 </CustomText>
-                <CustomText variant="body2">25/08/2024</CustomText>
+                <CustomText variant="body2">
+                  {formatDate(quote?.updatedAt)}
+                </CustomText>
               </View>
             </View>
           </Card>
@@ -158,8 +155,8 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
               <ServiceItem
                 key={service.id}
                 title={service.title}
-                description={service.description}
-                price={service.price}
+                description={{ text: service.description }}
+                totalInCents={service.totalInCents}
                 qtd={service.qtd}
               />
             ))}
@@ -199,9 +196,14 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
                   <CustomText variant="body2">Subtotal</CustomText>
                   <CustomText
                     variant="subTitle3"
-                    style={{ textDecorationLine: 'line-through' }}
+                    style={{
+                      textDecorationLine:
+                        quote?.discount.percentage > 0
+                          ? 'line-through'
+                          : 'none',
+                    }}
                   >
-                    {formatCurrencyBRL(4050)}
+                    {formatCurrencyBRL(quote?.subtotalInCents)}
                   </CustomText>
                 </View>
 
@@ -212,7 +214,13 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
                     alignItems: 'center',
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
                     <CustomText variant="body2">Discount</CustomText>
                     <View
                       style={{
@@ -225,12 +233,12 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
                       }}
                     >
                       <CustomText variant="body3" color="success_dark">
-                        5% off
+                        {quote?.discount.percentage}% off
                       </CustomText>
                     </View>
                   </View>
                   <CustomText variant="subTitle3" color="success_dark">
-                    - {formatCurrencyBRL(200)}
+                    - {formatCurrencyBRL(quote?.discount.amountInCents)}
                   </CustomText>
                 </View>
               </View>
@@ -247,7 +255,7 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
             >
               <CustomText variant="subTitle2">Total investment</CustomText>
               <CustomText variant="title">
-                {formatCurrencyBRL(3847.5)}
+                {formatCurrencyBRL(quote?.totalInCents)}
               </CustomText>
             </View>
           </Card>
@@ -256,13 +264,17 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
 
       <View style={styles.footer}>
         <View style={styles.footerActions}>
-          <ButtonIcon>
+          <ButtonIcon onPress={handleDeleteQuote}>
             <Trash2 size={20} color={COLORS.DANGER_BASE} />
           </ButtonIcon>
-          <ButtonIcon>
+          <ButtonIcon onPress={handleCopyQuote}>
             <Copy size={20} color={COLORS.BASE_PURPLE} />
           </ButtonIcon>
-          <ButtonIcon>
+          <ButtonIcon
+            onPress={() =>
+              navigation.navigate('createOrUpdate', { id: quoteId })
+            }
+          >
             <Edit size={20} color={COLORS.BASE_PURPLE} />
           </ButtonIcon>
         </View>
@@ -286,4 +298,3 @@ export function DetailsQuote({ navigation, route }: DetailsQuoteProps) {
     </View>
   )
 }
-

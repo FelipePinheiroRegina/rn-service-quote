@@ -1,0 +1,6 @@
+export enum ORDER_BY {
+  MOST_RECENT = 'MOST_RECENT',
+  OLDEST = 'OLDEST',
+  HIGHEST = 'HIGHEST',
+  LOWEST = 'LOWEST',
+}

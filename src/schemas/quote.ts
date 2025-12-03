@@ -6,12 +6,12 @@ export const schemaQuote = z.object({
   title: z.string().min(5).max(80),
   client: z.string().min(1).max(80),
   status: z.nativeEnum(STATUS),
-  subtotalInCents: z.number().positive(),
+  subtotalInCents: z.number().min(0),
   discount: z.object({
-    percentage: z.number().positive().min(0).max(100),
-    amountInCents: z.number().positive(),
+    percentage: z.number().min(0).max(100),
+    amountInCents: z.number().min(0),
   }),
-  totalInCents: z.number().positive(),
+  totalInCents: z.number().min(0),
 
   createdAt: z.date(),
   updatedAt: z.date().optional(),
